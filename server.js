@@ -18,21 +18,43 @@ app.use(express.static("public"))
 
 
 // HTML ROUTES
-app.get("*", (req, res)=>{
-    res.sendFile(path.join(__dirname, "/public/index.html"));
-});
 
 app.get("/notes", (req, res)=>{
     res.sendFile(path.join(__dirname,"/public/notes.html"));
 });
 
+
+
+
 // API ROUTES
 
 
 app.get("/api/notes", (req, res) =>{
-    res.db.json(notes)
+    fs.readFile("./db/db.json" ,"utf8", function(err,data){
+        if(err) throw err
+        let savedData= JSON.parse(data)
+        return res.json(savedData)
+    })
+    
 })
 
+app.post("/api/notes",function( req,res){
+    let newData= req.body
+    // console.log(newData);
+    
+    res.send(newData)
+
+    
+})
+
+app.delete("api/notes/:id", function(req, res){
+
+})
+
+
+app.get("*", (req, res)=>{
+    res.sendFile(path.join(__dirname, "/public/index.html"));
+});
 
 
 
