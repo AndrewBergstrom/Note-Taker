@@ -3,63 +3,50 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const util = require("util");
 
 // Sets up the Express App
 // =============================================================
 const app = express();
-const PORT = process.env.PORT || 4500;
+const PORT = 4500;
+const mainPath = path.join(__dirname, "/public")
 
 // Sets up the Express app to handle data parsing
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"))
-
-
-
-// HTML ROUTES
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/notes", (req, res)=>{
-    res.sendFile(path.join(__dirname,"/public/notes.html"));
+    res.sendFile(path.join(mainPath,"notes.html"));
 });
 
+app.get("/api/notes", (req, res)=>{
+    res.sendFile(path.join(__dirname, "/db/db.json"));
+});
 
-
-
-// API ROUTES
-
-
-app.get("/api/notes", (req, res) =>{
-    fs.readFile("./db/db.json" ,"utf8", function(err,data){
-        if(err) throw err
-        let savedData= JSON.parse(data)
-        return res.json(savedData)
-    })
-    
-})
-
-app.post("/api/notes",function( req,res){
-    let newData= req.body
-    // console.log(newData);
-    
-    res.send(newData)
-
-    
-})
-
-app.delete("api/notes/:id", function(req, res){
-
-})
-
+app.get("/api/notes/:id", (req, res)=>{
+    let savedNotes = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
+    res.json(savedNotes[Number(req.params.id)]);
+});
 
 app.get("*", (req, res)=>{
-    res.sendFile(path.join(__dirname, "/public/index.html"));
+    res.sendFile(path.join(mainPath, "index.html"));
 });
 
+app.post("/api/notes", (req, res)=> {
+    let savedNotes = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
+    let newNotes = req.body;
+    let noteID = (savedNotes.length).toString();
+    newNotes.id = noteID;
+    savedNotes.push(newNotes);
 
+    fs.writeFileSync("./db/db.json", JSON.stringify(savedNotes));
+    console.log("note saved to db.json. Content: ", newNotes);
+    res.json(savedNotes)
+})
 
 // Starts the server to begin listening
 // =============================================================
 app.listen(PORT, function () {
     console.log("App listening on PORT " + PORT);
 });
+
